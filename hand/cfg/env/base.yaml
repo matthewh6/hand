@@ -1,0 +1,16 @@
+image_extra: im-${.image_obs}_f-${.n_frame_stack}
+hp_name: ${fix_env_hp_name:env_hp, ${.image_obs}, ${.image_extra}}
+
+env_name: null
+env_id: null
+dataset_name: null
+
+num_envs: 20
+image_obs: null
+gamma: 0.999
+task_dim: 1
+image_shape: null
+action_dim: null
+n_frame_stack: 1
+action_scale: 1
+calvin_data_dir: null

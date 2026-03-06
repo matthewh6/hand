@@ -1,0 +1,29 @@
+data_dir: null  # path to CALVIN training data
+
+env_name: calvin
+task_name: open_drawer
+
+dataset_name: calvin
+env: D+0
+envs: [A+0, B+0, C+0]
+
+precompute_embeddings: False
+black_white: False
+batch_size: 64
+framestack: 1
+action_type: relative  # absolute, relative, joint
+
+embedding_model: radio-g
+feature_map_layer: layer4
+
+N: null
+seed: 521
+
+save_imgs: True
+debug: False
+
+hp_name: calvin_to_tfds_${env_name}_${task_name}_seed-${seed}
+run_id: 0000
+
+defaults:
+  - local: default

@@ -1,0 +1,40 @@
+env_name: metaworld
+task_name: mw-hammer
+seed: 0
+data_dir: null  # path to robot play data
+dataset_name: tdmpc2-buffer-imgs
+precompute_embeddings: False
+black_white: False
+batch_size: 64
+framestack: 1
+
+max_return: 1000
+num_samples: 500
+ckpt_num: 200000
+save_imgs: False
+debug: False
+
+compute_2d_flow: False
+flow:
+  sam2_checkpoint_file: null  # path to SAM2 checkpoint
+  model_cfg_file: sam2.1_hiera_l.yaml
+  grounding_model_id: IDEA-Research/grounding-dino-tiny
+
+  video_dir: notebooks/videos/robot
+  video_file: null
+
+  text_prompt: "robot. object."
+  device: cuda
+
+  base_path: null
+  cotracker_ckpt_file: null  # path to CoTracker checkpoint
+  seg_mask_file: data/videos/segm_mask.npy
+  grid_size: 25
+
+  save_tracking_video: False
+  tracking_dir: results
+  tracking_filename: segm_grid
+  max_query_points: 40
+
+compute_embeddings: True
+embedding_model: 'radio-g'

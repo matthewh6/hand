@@ -1,0 +1,14 @@
+env_name: robot
+env_id: pick_up_bowl
+image_obs: true
+
+max_episode_steps: 200
+state_dim: 7
+action_dim: 7
+image_shape: [128, 128]
+
+n_frame_stack: 1
+
+defaults:
+  - base
+  - _self_

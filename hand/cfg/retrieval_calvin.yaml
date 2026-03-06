@@ -1,0 +1,44 @@
+hydra:
+  searchpath:
+    - pkg://hand.cfg
+
+hp_name: retrieval_ft-${method}_q-${query_source}_K-${K}_N-${N}_t-${query_task}_exp-${with_expert}
+query_task: close_drawer
+seed: 521 
+
+# retrieval cfgs
+N: 6                                    # query trajs
+K: 100                                  # retrieved subtrajs
+K2: 100                                 # for hand, retrieved subtrajs
+method: hand                            # strap, 3d, 2d_abs, 2d, hand_abs, hand
+query_source: expert
+with_expert: True
+
+query_env: D+0
+play_envs: [A+0, B+0, C+0]
+
+save_imgs: True
+save_costs: True
+save_dataset: False
+
+dataset_name: calvin
+env_name: ${env.env_name}
+
+debug: False
+image_size: ${env.image_shape}
+precompute_embeddings: False
+
+use_wandb: False
+wandb:
+  entity: null
+  project: hand-demos-retrieval
+  name: ${hp_name}
+
+task: null 
+split_into_subtrajs: False
+
+run_id: 0000
+
+defaults:
+  - local: default
+  - env: calvin

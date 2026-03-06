@@ -1,0 +1,18 @@
+hydra:
+  searchpath:
+    - pkg://hand.cfg
+
+name: split_long_horizon_queries
+hp_name: split_long_horizon_queries
+
+run_id: 0000
+
+long_horizon_path: ${paths.data_dir}/datasets/calvin/long_horizon
+long_horizon_save_path: null  # path to save split long horizon data
+
+use_wandb: False
+debug: False
+
+defaults:
+  - local: default
+  - _self_

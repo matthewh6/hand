@@ -1,0 +1,31 @@
+# Local config
+hand/cfg/local/
+
+# Python
+**/__pycache__/
+*.egg-info/
+dist/
+build/
+*.pyc
+*.pyo
+
+# Experiment outputs
+wandb/
+results/
+multirun/
+outputs/
+runs/
+
+# Data files
+*.pth
+*.ipynb
+*.pkl
+*.dat
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

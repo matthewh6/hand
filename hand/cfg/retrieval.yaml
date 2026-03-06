@@ -1,0 +1,41 @@
+hydra:
+  searchpath:
+    - pkg://hand.cfg
+
+hp_name: retrieval_qt-${method}_q-${query_source}_K-${K}_N-${N}_t-${query_task}_expdemos-${with_expert}
+seed: 521 
+
+# retrieval cfgs
+N: 3                                    # query trajs
+K: 100                                  # retrieved subtrajs
+K2: 20                                  # retrieved subtrajs
+two_step_retrieval: False
+method: hand                            # strap, 3d, 2d_abs, 2d, hand_abs, hand
+query_source: expert                    # expert or hamster
+with_expert: True
+
+dataset_name: robot
+query_task: pick_up_green_block_expert
+other_tasks: [play,play1,play2]
+
+debug: False
+
+use_wandb: False
+wandb:
+  entity: null
+  project: hand-demos-retrieval
+  name: ${hp_name}
+
+run_id: 0000
+task: null 
+split_into_subtrajs: False
+save_dataset: False
+embedding_model: resnet18
+resnet_feature_map_layer: layer4
+
+# if we want to use a specific query file
+query_files: null
+
+defaults:
+  - local: default
+  - env: robot

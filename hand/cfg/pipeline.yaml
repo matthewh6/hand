@@ -1,0 +1,58 @@
+hydra:
+  searchpath:
+    - pkg://hand.cfg
+
+# General settings
+env_name: robot
+use_wandb: True
+
+# Model configs
+embedding_model: resnet18
+embedding_dim: 512
+
+# Preprocessing controls
+force_preprocess: false
+force_split: false
+skip_confirmation: false
+
+# Base retrieval settings
+query_task: close_microwave
+query_files: null
+other_tasks: [play,play1,play2]
+
+query_source: expert
+with_expert: false
+save_dataset: true
+
+# Retrieval settings
+two_step_retrieval: True
+weighted_loss: True
+
+# Search space for grid search
+search_space:
+  N: [3]
+  K: [100,250,500]
+  K2: [10,25]
+  two_step_retrieval: [True]
+  feature_type: [2d]
+
+# Training settings
+num_trajs: -1
+seed: 521
+input_modalities: [external_images_embeds,over_shoulder_images_embeds]
+train_frac: 1.0
+batch_size: 128
+num_updates: 20000
+ckpt_file: null
+finetune: True
+load_from_ckpt: True
+seq_len: 5
+
+# Retrieval settings
+force_retrieval: False
+retrieval_timeout: 3600
+
+debug: false
+
+defaults:
+  - local: default

@@ -1,0 +1,9 @@
+[submodule "co-tracker"]
+	path = co-tracker
+	url = https://github.com/facebookresearch/co-tracker.git
+[submodule "calvin"]
+	path = calvin
+	url = https://github.com/mees/calvin.git
+[submodule "Grounded-SAM-2"]
+	path = Grounded-SAM-2
+	url = https://github.com/IDEA-Research/Grounded-SAM-2.git
