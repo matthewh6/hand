@@ -126,7 +126,6 @@ def retrieval(
             play = get_features(
                 traj_dir=play_path,
                 method=method,
-                env=cfg.env.env_name,
             )
 
             # S-DTW requires the reference trajectory to be longer than the query trajectory
@@ -162,9 +161,8 @@ def retrieval(
             retrieved_trajs = retrieved_trajs[:matches_per_query]
 
         # Visualize retrieved trajectories
-        all_videos, all_frames = visualize_retrieved_trajs(cfg, retrieved_trajs)
-
         if wandb_run is not None:
+            all_videos, all_frames = visualize_retrieved_trajs(cfg, retrieved_trajs)
             wandb_run.log(
                 {
                     f"retrieved_subtrajs_{query_i}": all_videos,
@@ -172,9 +170,7 @@ def retrieval(
                 }
             )
 
-        fig = visualize_paths(retrieved_trajs)
-
-        if wandb_run is not None:
+            fig = visualize_paths(retrieved_trajs)
             wandb_run.log({"retrieval_stats/trajectory": [wandb.Image(fig)]})
 
         # use features as cost unless path cost weighting

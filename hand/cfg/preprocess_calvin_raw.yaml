@@ -1,0 +1,12 @@
+calvin_data_dir: null  # path to CALVIN training data (e.g., calvin/dataset/task_D_D/training)
+calvin_env: D+0
+
+task_name: all  # specific task name, "play", or "all"
+play_chunk_size: 64
+
+seed: 521
+debug: False
+
+defaults:
+  - local: default
+  - _self_

@@ -109,7 +109,7 @@ def visual_filtering(cfg, query_paths, play_paths, method, wandb_run, K: int = N
         if cfg.debug and i > 30:
             break
 
-        feats = get_features(traj_dir=traj_dir, method=method, env=cfg.env.env_name)
+        feats = get_features(traj_dir=traj_dir, method=method)
 
         all_other_feats.append(feats)
 
@@ -117,7 +117,7 @@ def visual_filtering(cfg, query_paths, play_paths, method, wandb_run, K: int = N
 
     for query_i, query_dir in enumerate(query_paths):
         query_feats = get_features(
-            traj_dir=query_dir, method=method, env=cfg.env.env_name
+            traj_dir=query_dir, method=method
         )
 
         scores = []
@@ -209,11 +209,9 @@ def get_tracked_points(video, eef, env, cotracker, cfg):
 
 
 def minimax_ln_scaling(val):
-    if len(val) == 1:
-        return np.array([np.log(100)])  # or just 0.0 if you'd prefer the midpoint
+    if len(val) <= 1 or np.max(val) == np.min(val):
+        return np.full_like(val, np.log(100))
 
     val = (val - np.min(val)) / (np.max(val) - np.min(val))  # Normalize to [0, 1]
     log_min, log_max = np.log(1e-2), np.log(100)  # [-4.605, 4.605]
     return val * (log_max - log_min) + log_min
-
-

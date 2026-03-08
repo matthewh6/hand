@@ -1,0 +1,25 @@
+dataset_path: null  # path to saved TFDS dataset (e.g., data/tensorflow_datasets/retrieval/calvin/hand/move-slider-left_N-6_K-100)
+
+# training
+batch_size: 64
+lr: 1e-4
+num_epochs: 100
+eval_every: 10
+save_every: 10
+chunk_size: 20
+seed: 521
+
+# model
+d_model: 256
+nhead: 4
+num_layers: 4
+image_encoder: dinov2_vitb14
+
+# data
+state_dim: 15
+action_dim: 7
+image_size: [200, 200]
+
+defaults:
+  - local: default
+  - _self_

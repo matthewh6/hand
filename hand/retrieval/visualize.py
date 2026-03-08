@@ -21,18 +21,17 @@ def visualize_first_step_retrieved_trajs(cfg, retrieved_trajs, num_vis=100):
 
     # First collect all videos and frames
     for i, path in enumerate(retrieved_trajs[:num_vis]):
-        if cfg.env.env_name == "calvin":
-            video = load_data_compressed(path)[1]
-            if "2d" in cfg.method or "hand" in cfg.method:
-                flow_path = path / "2d_flow_query.dat"
-                flow = load_data_compressed(path)[8]
-                video = add_flow_to_video(video, flow)
-        elif cfg.env.env_name == "robot":
-            video_path = path / "external_images.dat"
-            video = load_data_compressed(video_path)
-            if "2d" in cfg.method or "hand" in cfg.method:
-                flow_path = path / "2d_flow_query.dat"
-                flow = load_data_compressed(flow_path)["points"][:, 0]
+        path = Path(path)
+        video_path = path / "external_images.dat"
+        video = load_data_compressed(video_path)
+        if "2d" in cfg.method or "hand" in cfg.method:
+            flow_path = path / "2d_flow_query.dat"
+            if flow_path.exists():
+                flow = load_data_compressed(flow_path)
+                if isinstance(flow, dict):
+                    flow = flow["points_normalized"][:, 0]
+                    flow[:, 0] *= video.shape[2]
+                    flow[:, 1] *= video.shape[1]
                 video = add_flow_to_video(video, flow)
 
         # Get keyframes
@@ -149,8 +148,9 @@ def add_flow_to_video(video, flow):
 
 
 def visualize_query(query_data, cfg):
-    rgb_static = query_data[1]
-    points = query_data[7]["points"].reshape(-1, 2)
+    rgb_static = query_data["external_images"] if isinstance(query_data, dict) else query_data[1]
+    flow = query_data.get("flow", query_data[7] if not isinstance(query_data, dict) else None)
+    points = flow["points"].reshape(-1, 2) if isinstance(flow, dict) else flow.reshape(-1, 2)
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 8))
 
@@ -194,7 +194,7 @@ def visualize_paths(retrieved_trajs):
 
     for i, ((path, info), alpha) in enumerate(zip(retrieved_trajs, alphas)):
         data = load_data_compressed(_traj_path(path))
-        ee_pos = data[6][:, :3]
+        ee_pos = data["states"][:, :3]
 
         color = "red" if i == 0 else "blue"
         linewidth = 3 if i == 0 else 1.5
@@ -266,7 +266,7 @@ def visualize_method_paths(methods_trajs):
                 break
 
             data = load_data_compressed(_traj_path(path))
-            ee_pos = data[6][:, :3]
+            ee_pos = data["states"][:, :3]
 
             if traj_idx == 0:
                 # Query trajectory (dark red)

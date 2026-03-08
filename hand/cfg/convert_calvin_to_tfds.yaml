@@ -4,8 +4,8 @@ env_name: calvin
 task_name: open_drawer
 
 dataset_name: calvin
-env: D+0
-envs: [A+0, B+0, C+0]
+calvin_env: D+0
+calvin_envs: [A+0, B+0, C+0]
 
 precompute_embeddings: False
 black_white: False
@@ -27,3 +27,4 @@ run_id: 0000
 
 defaults:
   - local: default
+  - _self_

@@ -48,7 +48,7 @@ from hand.utils.logger import log
 
 
 def convert_play_data(cfg, embedder):
-    envs = cfg.envs
+    envs = cfg.calvin_envs
 
     for env in envs:
         task_data_dir = Path(cfg.data_dir) / env
@@ -207,7 +207,7 @@ def main(cfg):
         torch.manual_seed(cfg.seed)
         torch.cuda.manual_seed_all(cfg.seed)
 
-    replay_buffer = Path(cfg.data_dir) / cfg.env
+    replay_buffer = Path(cfg.data_dir) / cfg.calvin_env
     data_dirs = glob(str(replay_buffer) + "/*")
 
     # Initialize embedder if requested

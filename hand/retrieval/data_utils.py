@@ -1,7 +1,5 @@
-import pickle as pkl
 from pathlib import Path
 
-import blosc
 import numpy as np
 import torch
 import tqdm
@@ -9,7 +7,6 @@ from omegaconf import DictConfig
 
 from hand.data.utils import get_base_trajectory, load_data_compressed
 from hand.retrieval.utils import TASK_TO_LANG
-from hand.utils.general_utils import to_numpy
 from hand.utils.logger import log
 
 
@@ -22,31 +19,17 @@ def format_to_tfds(cfg: DictConfig, retrieved_trajs: np.ndarray):
         desc="Formatting retrieved trajectories to TFDS",
     ):
         cost, start, end = metrics
-
         path = Path(path)
+        sl = slice(start, end + 1 if end != -1 else None)
+
         traj_file = path / "traj_data.dat" if path.is_dir() else path
-        with open(traj_file, "rb") as f:
-            traj_data = f.read()
-            traj_data = blosc.decompress(traj_data)
-            traj_data = pkl.loads(traj_data)
-
-        if cfg.env.env_name == "calvin":
-            if isinstance(traj_data[8], dict):
-                traj_data[8] = np.array(traj_data[8]["points"]).squeeze()
-            else:
-                traj_data[8] = np.array(traj_data[8]).squeeze()
-
-            for j in range(len(traj_data)):
-                traj_data[j] = to_numpy(traj_data[j])[
-                    start : end + 1 if end != -1 else None
-                ]
+        traj_data = load_data_compressed(traj_file)
 
         if cfg.env.env_name == "calvin":
             final_data = {
-                "observations": np.array(traj_data[6]),
-                "actions": np.array(traj_data[4]),
-                "rewards": np.zeros_like(traj_data[0]),
-                "scene_obs": np.array(traj_data[7]),
+                "observations": np.array(traj_data["states"][sl]),
+                "actions": np.array(traj_data["actions"][sl]),
+                "rewards": np.zeros(len(traj_data["actions"][sl])),
             }
         elif cfg.env.env_name == "robot":
             obs_dict = traj_data[0]
@@ -55,9 +38,9 @@ def format_to_tfds(cfg: DictConfig, retrieved_trajs: np.ndarray):
             actions = policy_out["actions"]
 
             final_data = {
-                "observations": np.array(state),
-                "actions": np.array(actions),
-                "rewards": np.zeros(len(actions)),
+                "observations": np.array(state[sl]),
+                "actions": np.array(actions[sl]),
+                "rewards": np.zeros(len(actions[sl])),
             }
 
         base_trajectory = get_base_trajectory(final_data["rewards"])
@@ -65,11 +48,17 @@ def format_to_tfds(cfg: DictConfig, retrieved_trajs: np.ndarray):
 
         if cfg.env.env_name == "calvin":
             if cfg.save_imgs:
-                final_data["images"] = np.array(traj_data[1])
-                final_data["wrist_images"] = np.array(traj_data[2])
+                images = load_data_compressed(path / "external_images.dat")
+                final_data["images"] = np.array(images[sl])
+                wrist_file = path / "wrist_images.dat"
+                if wrist_file.exists():
+                    wrist_images = load_data_compressed(wrist_file)
+                    final_data["wrist_images"] = np.array(wrist_images[sl])
 
-            final_data["external_img_embeds"] = np.array(traj_data[10])
-            final_data["wrist_img_embeds"] = np.array(traj_data[11])
+            embed_file = path / "external_img_embeds_dinov2_vitb14.dat"
+            if embed_file.exists():
+                embeds = load_data_compressed(embed_file)
+                final_data["external_img_embeds"] = np.array(embeds[sl])
         elif cfg.env.env_name == "robot":
             final_data.update(traj_data[2])
             final_data.update(traj_data[3])

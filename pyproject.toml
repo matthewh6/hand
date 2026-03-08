@@ -17,15 +17,24 @@ dependencies = [
     "tqdm",
     "blosc",
     "numba",
+    "scipy",
     "einops",
     "tensorflow>=2.15.0",
     "opencv-python",
+    "transformers>=4.44,<4.46",
+    "accelerate",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.8.6",
+]
+calvin-eval = [
+    "pytorch-lightning",
+    "pybullet",
+    "pyhash",
+    "termcolor",
 ]
 
 [tool.uv.sources]

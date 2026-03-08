@@ -9,6 +9,11 @@
       <h1>
         HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval
       </h1>
+      <p>
+        <a href="https://matthewh6.github.io/">Matthew M. Hong*</a>, <a href="https://aliang8.github.io/">Anthony Liang*</a>, <a href="https://minjunkevink.github.io/">Kevin Kim</a>, <a href="https://scholar.google.com/citations?user=Sqo9kfgAAAAJ&hl=en">Harshitha Rajaprakash</a>, <a href="https://jessethomason.com/">Jesse Thomason&dagger;</a>, <a href="https://ebiyik.github.io/">Erdem B&#305;y&#305;k&dagger;</a>, <a href="https://www.jessezhang.net/">Jesse Zhang&dagger;</a>
+      </p>
+      <p><sub>* Equal contribution &emsp; &dagger; Equal advising</sub></p>
+      <h3><b>ICRA 2026</b></h3>
       <h2>
         <a href="https://arxiv.org/abs/2505.20455">Paper</a> &emsp;
         <a href="https://liralab.usc.edu/handretrieval/">Website</a> &emsp;
@@ -24,9 +29,13 @@
 
 # Overview
 
-**HAND** is a *simple* and *time-efficient* method for teaching robots manipulation tasks from human hand demonstrations. It extracts hand motion to retrieve relevant robot sub-trajectories from task-agnostic play data. The retrieved datasets can be used with any behavior cloning (BC) framework for policy training and LoRA fine-tuning.
+**HAND** is a *simple* and *time-efficient* method for teaching robots manipulation tasks from human hand demonstrations. It extracts hand motion to retrieve relevant robot sub-trajectories from task-agnostic play data. Retrieval data is then used to LoRA fine-tune a pre-trained policy.
 
-# Quick Start
+# Quick Start (CALVIN)
+
+The full pipeline: download data, preprocess, retrieve from environments A/B/C using a task demo from D, train an ACT policy, and evaluate on D.
+
+## 1. Install
 
 ```bash
 git clone --recurse-submodules https://github.com/jesbu1/p-llm-hf.git
@@ -37,125 +46,178 @@ uv sync
 source .venv/bin/activate
 ```
 
-This installs `hand`, `cotracker`, and all dependencies in one `.venv`. Submodules (`co-tracker`, `Grounded-SAM-2`, `calvin`) are cloned automatically. **No robot_learning dependency**—hand is fully standalone.
+## 2. Configure local paths
 
-### Optional: Grounded-SAM-2 (for HAND retrieval on real robot)
-
-```bash
-uv pip install -e Grounded-SAM-2
-```
-
-### Optional: CALVIN (for CALVIN experiments)
-
-```bash
-cd calvin && git submodule update --init --recursive && cd ..
-export CALVIN_ROOT=$(pwd)/calvin
-uv pip install -e calvin/calvin_env
-uv pip install -e calvin/calvin_env/tacto
-```
-
-## Local Config
-
-Create a file `hand/cfg/local/default.yaml` with paths for your machine:
+Create `hand/cfg/local/default.yaml`:
 
 ```yaml
 # @package _global_
 
 paths:
-  project_dir: /path/to/project
-  data_dir: /path/to/data
-  results_dir: /path/to/results
-  wandb_dir: /path/to/wandb
+  project_dir: /absolute/path/to/this/repo
+  data_dir: /absolute/path/to/this/repo/data
+  results_dir: /absolute/path/to/this/repo/results
+  wandb_dir: /absolute/path/to/this/repo/results/wandb
+  root_dir: /absolute/path/to/this/repo
 ```
 
-# Play Data
+> All paths must be **absolute**. `data_dir` is where preprocessed datasets and retrieved TFDS outputs are written.
 
-## CALVIN
-
-1. **Download** the CALVIN dataset from the [official repo](https://github.com/mees/calvin):
+## 3. Download CALVIN data
 
 ```bash
-cd $CALVIN_ROOT/dataset
-sh download_data.sh D      # or ABC, ABCD, or debug (1.3 GB)
+cd calvin/dataset
+
+# Download D (query demonstrations + evaluation)
+sh download_data.sh D
+
+# Download ABC (play data to retrieve from)
+sh download_data.sh ABC
+
+cd ../..
 ```
 
-2. **Convert** to the format expected by retrieval (with precomputed embeddings):
+This creates `calvin/dataset/task_D_D/` and `calvin/dataset/task_ABC_D/`.
+
+## 4. Preprocess
+
+Convert raw CALVIN `.npz` episodes into `processed_trajs/` format. This segments trajectories, saves images/states/actions, computes DINOv2 embeddings, and runs Molmo + CoTracker for 2D flow tracking.
 
 ```bash
-uv run hand/scripts/convert_calvin_to_tfds.py \
-    data_dir=/path/to/calvin/task_D_D \
-    env=D+0 \
-    task_name=move_slider_left \
-    precompute_embeddings=True \
-    embedding_model=radio-g
+# Preprocess D (query tasks + play data)
+uv run hand/scripts/preprocess_calvin_raw.py \
+    calvin_data_dir=calvin/dataset/task_D_D/training \
+    calvin_env=D+0 \
+    task_name=all
 
-uv run hand/scripts/convert_calvin_to_tfds.py \
-    data_dir=/path/to/calvin/task_D_D \
-    env=D+0 \
-    task_name=play \
-    precompute_embeddings=True \
-    embedding_model=radio-g
+# Preprocess ABC play data (all three environments as one pool)
+uv run hand/scripts/preprocess_calvin_raw.py \
+    calvin_data_dir=calvin/dataset/task_ABC_D/training \
+    calvin_env=ABC+0 \
+    task_name=play
 ```
 
-3. Set `paths.data_dir` in `hand/cfg/local/default.yaml` to the directory containing `datasets/` and `tensorflow_datasets/`.
+Output: `data/datasets/calvin/D+0/{task}/processed_trajs/` (query) and `data/datasets/calvin/ABC+0/processed_trajs/` (play).
 
-   Retrieval expects `data_dir/datasets/calvin/{env}/{task}/processed_trajs/` (e.g. `D+0/move_slider_left`, `A+0/play`). The convert script writes to `tensorflow_datasets/` for training. For retrieval, ensure your data is in the `processed_trajs` layout; see `hand/scripts/preprocess_calvin_data.py` for the expected format.
+## 5. Retrieve from ABC using D queries
 
-# Experiments
-
-## Retrieval
-
-### CALVIN
-
-<details>
-<summary><b>Click to expand the full list of commands</b></summary>
-
-#### Two-Step Retrieval (HAND)
+Retrieve sub-trajectories from ABC play data that match a task demonstration from D:
 
 ```bash
+# HAND retrieval (visual filtering + 2D path matching)
 uv run hand/retrieval/retrieval_calvin.py \
     query_task=move_slider_left \
-    query_source=expert \
     method=hand \
-    K=1000 \
+    query_env=D+0 \
+    play_envs='[ABC+0]' \
+    K=250 \
     K2=100 \
     save_dataset=True
 ```
 
-#### One-Step Retrieval (STRAP)
+Other retrieval methods:
 
 ```bash
+# STRAP retrieval (DINOv2 embedding similarity)
 uv run hand/retrieval/retrieval_calvin.py \
     query_task=move_slider_left \
-    query_source=expert \
     method=strap \
+    query_env=D+0 \
+    play_envs='[ABC+0]' \
+    K=100 \
+    save_dataset=True
+
+# 3D retrieval (end-effector position matching)
+uv run hand/retrieval/retrieval_calvin.py \
+    query_task=move_slider_left \
+    method=3d \
+    query_env=D+0 \
+    play_envs='[ABC+0]' \
     K=100 \
     save_dataset=True
 ```
 
-</details>
+Retrieved datasets are saved to `data/tensorflow_datasets/`.
 
-### Real World (Robot)
+## 6. Train ACT policy
 
-<details>
-<summary><b>Click to expand the full list of commands</b></summary>
-
-#### STRAP Retrieval
+Train an Action Chunking Transformer policy on the retrieved dataset:
 
 ```bash
-uv run hand/retrieval/retrieval.py \
-    env=robot \
-    query_task=keurig \
-    other_tasks=[play] \
-    query_source=expert \
-    method=strap \
-    N=2 \
-    K=100 \
-    with_expert=True \
-    query_files=[/path/to/expert/demo/1,/path/to/expert/demo/2]
+uv run hand/scripts/train_act.py \
+    dataset_path=data/tensorflow_datasets/retrieval_with_expert_two_step/calvin/hand/move-slider-left_N-6_K-250
 ```
 
-#### HAND Retrieval
+Checkpoints are saved to `results/checkpoints/`.
+
+<details>
+<summary><b>Training parameters</b></summary>
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `dataset_path` | required | Path to saved TFDS dataset |
+| `batch_size` | `64` | Training batch size |
+| `lr` | `1e-4` | Learning rate |
+| `num_epochs` | `100` | Number of training epochs |
+| `chunk_size` | `20` | Action chunk size |
+| `d_model` | `256` | Transformer hidden dimension |
+| `num_layers` | `4` | Transformer decoder layers |
+| `image_encoder` | `dinov2_vitb14` | Frozen image encoder |
+
+</details>
+
+## 7. Evaluate on CALVIN D
+
+Run the trained policy on the standard CALVIN multi-step evaluation benchmark (1000 sequences of 5 chained tasks):
+
+```bash
+uv run hand/scripts/eval_calvin.py \
+    --checkpoint results/checkpoints/move-slider-left_N-6_K-250/best.pt \
+    --dataset_path calvin/dataset/task_D_D
+```
+
+This reports success rates for completing 1-5 tasks in a row.
+
+<details>
+<summary><b>All retrieval parameters</b></summary>
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `query_task` | `close_drawer` | CALVIN task name (e.g., `move_slider_left`, `open_drawer`) |
+| `method` | `hand` | `strap`, `hand`, `3d`, `2d`, `2d_abs`, `hand_abs` |
+| `N` | `6` | Number of query trajectories |
+| `K` | `100` | Retrieved sub-trajectories (for HAND: first-step filter size) |
+| `K2` | `100` | Second-step retrieval size (HAND only) |
+| `query_env` | `D+0` | Environment split for query trajectories |
+| `play_envs` | `[D+0]` | Environment splits to search over |
+| `with_expert` | `True` | Include query trajectories in retrieved set |
+| `save_dataset` | `False` | Save as TensorFlow dataset |
+| `use_wandb` | `False` | Log videos/plots to W&B |
+
+</details>
+
+# Real World (Robot)
+
+<details>
+<summary><b>Click to expand</b></summary>
+
+### Data Preprocessing
+
+Split trajectories into subtrajectories before retrieval:
+
+```bash
+uv run hand/retrieval/scripts/split_data_into_subtrajs.py \
+    dataset_name=robot \
+    task=play
+```
+
+### Optional: Grounded-SAM-2
+
+```bash
+uv pip install -e Grounded-SAM-2
+```
+
+### HAND Retrieval
 
 ```bash
 uv run hand/retrieval/retrieval.py \
@@ -171,46 +233,33 @@ uv run hand/retrieval/retrieval.py \
     query_files=[/path/to/hand/demo/1]
 ```
 
-</details>
-
-## Data Preprocessing (Real World)
-
-Before running retrieval on real robot data, split trajectories into subtrajectories:
+### STRAP Retrieval
 
 ```bash
-uv run hand/retrieval/scripts/split_data_into_subtrajs.py \
-    dataset_name=robot \
-    task=play
-```
-
-## Retrieval Pipeline (Real World)
-
-For batch retrieval over multiple parameter combinations:
-
-```bash
-uv run hand/retrieval/scripts/pipeline.py \
+uv run hand/retrieval/retrieval.py \
     env=robot \
     query_task=keurig \
     other_tasks=[play] \
-    ...
+    query_source=expert \
+    method=strap \
+    N=2 \
+    K=100 \
+    with_expert=True \
+    query_files=[/path/to/expert/demo/1,/path/to/expert/demo/2]
 ```
 
-Requires preprocessed data (traj_data.dat, embeddings) in `data_dir/datasets/{env}/{task}/`. The pipeline runs retrieval and produces TFDS datasets; training is done with your preferred BC framework.
-
-## Policy Training
-
-HAND focuses on **retrieval**. The retrieved TFDS datasets can be used with any BC framework (e.g., [LeRobot](https://github.com/huggingface/lerobot), [ACT](https://github.com/tonyzhaozh/act)) for base policy training and LoRA fine-tuning. See the [paper](https://arxiv.org/abs/2505.20455) for training details.
+</details>
 
 # Citation
 
 ```bibtex
 @article{hong2025handdatafastrobot,
-      title={HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval}, 
+      title={HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval},
       author={Matthew M Hong and Anthony Liang and Kevin Kim and Harshitha Rajaprakash and Jesse Thomason and Erdem Bıyık and Jesse Zhang},
       year={2025},
       eprint={2505.20455},
       archivePrefix={arXiv},
       primaryClass={cs.RO},
-      journal={arXiv preprint arxiv:2505.20455}, 
+      journal={arXiv preprint arxiv:2505.20455},
 }
 ```
