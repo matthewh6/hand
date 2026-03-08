@@ -10,7 +10,8 @@
         HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval
       </h1>
       <p>
-        <a href="https://matthewh6.github.io/">Matthew M. Hong*</a>, <a href="https://aliang8.github.io/">Anthony Liang*</a>, <a href="https://minjunkevink.github.io/">Kevin Kim</a>, <a href="https://scholar.google.com/citations?user=Sqo9kfgAAAAJ&hl=en">Harshitha Rajaprakash</a>, <a href="https://jessethomason.com/">Jesse Thomason&dagger;</a>, <a href="https://ebiyik.github.io/">Erdem B&#305;y&#305;k&dagger;</a>, <a href="https://www.jessezhang.net/">Jesse Zhang&dagger;</a>
+        <a href="https://matthewh6.github.io/">Matthew M. Hong*</a>, <a href="https://aliang8.github.io/">Anthony Liang*</a>, <a href="https://minjunkevink.github.io/">Kevin Kim</a>, <a href="https://scholar.google.com/citations?user=Sqo9kfgAAAAJ&hl=en">Harshitha Rajaprakash</a>,<br>
+        <a href="https://jessethomason.com/">Jesse Thomason&dagger;</a>, <a href="https://ebiyik.github.io/">Erdem B&#305;y&#305;k&dagger;</a>, <a href="https://www.jessezhang.net/">Jesse Zhang&dagger;</a>
       </p>
       <p><sub>* Equal contribution &emsp; &dagger; Equal advising</sub></p>
       <h3><b>ICRA 2026</b></h3>
