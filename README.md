@@ -1,27 +1,31 @@
 <div align="center">
 
-<div id="user-content-toc">
-  <ul align="center" style="list-style: none;">
-    <summary>
-      <div>
-        <img src="assets/logo.png" alt="HAND Logo" style="height:5em;">
-      </div>
-      <h1>
-        HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval
-      </h1>
-      <p>
-        <a href="https://matthewh6.github.io/">Matthew M. Hong*</a>, <a href="https://aliang8.github.io/">Anthony Liang*</a>, <a href="https://minjunkevink.github.io/">Kevin Kim</a>, <a href="https://scholar.google.com/citations?user=Sqo9kfgAAAAJ&hl=en">Harshitha Rajaprakash</a>,<br>
-        <a href="https://jessethomason.com/">Jesse Thomason&dagger;</a>, <a href="https://ebiyik.github.io/">Erdem B&#305;y&#305;k&dagger;</a>, <a href="https://www.jessezhang.net/">Jesse Zhang&dagger;</a>
-      </p>
-      <p><sub>* Equal contribution &emsp; &dagger; Equal advising</sub></p>
-      <h3><b>ICRA 2026</b></h3>
-      <h2>
-        <a href="https://arxiv.org/abs/2505.20455">Paper</a> &emsp;
-        <a href="https://liralab.usc.edu/handretrieval/">Website</a> &emsp;
-        <a href="https://x.com/Jesse_Y_Zhang/status/1928248082392830292?s=20">Thread</a>
-      </h2>
-    </summary>
-  </ul>
+  <img src="assets/logo.png" alt="HAND Logo" height="80">
+
+  <h1>
+    HAND Me the Data: Fast Robot Adaptation via Hand Path Retrieval
+  </h1>
+
+  <p>
+    <a href="https://matthewh6.github.io/">Matthew M. Hong*</a>,
+    <a href="https://aliang8.github.io/">Anthony Liang*</a>,
+    <a href="https://minjunkevink.github.io/">Kevin Kim</a>,
+    <a href="https://scholar.google.com/citations?user=Sqo9kfgAAAAJ&hl=en">Harshitha Rajaprakash</a>,<br>
+    <a href="https://jessethomason.com/">Jesse Thomason&dagger;</a>,
+    <a href="https://ebiyik.github.io/">Erdem B&#305;y&#305;k&dagger;</a>,
+    <a href="https://www.jessezhang.net/">Jesse Zhang&dagger;</a>
+  </p>
+
+  <p><sub>* Equal contribution &nbsp; &dagger; Equal advising</sub></p>
+
+  <h3>ICRA 2026</h3>
+
+  <h2>
+    <a href="https://arxiv.org/abs/2505.20455">Paper</a> &nbsp; · &nbsp;
+    <a href="https://liralab.usc.edu/handretrieval/">Website</a> &nbsp; · &nbsp;
+    <a href="https://x.com/Jesse_Y_Zhang/status/1928248082392830292?s=20">Thread</a>
+  </h2>
+
 </div>
 
 <img src="assets/teaser.jpg" width="95%">
